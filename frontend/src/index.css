@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* Professional scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 12px;
+  border: 2px solid #f8fafc;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Professional button styles */
+.btn {
+  @apply inline-flex items-center justify-center px-6 py-3 font-medium text-sm rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-neutral-500;
+}
+
+.btn-secondary {
+  @apply bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 focus:ring-neutral-500;
+}
+
+.btn-outline {
+  @apply bg-transparent text-neutral-900 border border-neutral-300 hover:bg-neutral-50 focus:ring-neutral-500;
+}
+
+.btn-accent {
+  @apply bg-accent-400 text-neutral-900 hover:bg-accent-500 focus:ring-accent-300;
+}
+
+/* Professional input styles */
+.input {
+  @apply w-full px-4 py-3 text-sm border border-neutral-200 rounded-lg bg-white placeholder-neutral-400 focus:border-neutral-400 focus:ring-0 focus:outline-none transition-colors duration-200;
+}
+
+.input:focus {
+  @apply border-neutral-900;
+}
+
+/* Professional card styles */
+.card {
+  @apply bg-white rounded-xl border border-neutral-100 shadow-sm hover:shadow-md transition-all duration-300;
+}
+
+.card-elevated {
+  @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
+}
+
+/* Typography utilities */
+.text-display {
+  @apply font-display font-bold tracking-tight;
+}
+
+.text-heading {
+  @apply font-semibold tracking-tight;
+}
+
+.text-body {
+  @apply font-normal;
+}
+
+.text-small {
+  @apply text-sm font-medium;
+}
+
+/* Layout utilities */
+.container-fluid {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-16 lg:py-24;
+}
+
+.section-padding-sm {
+  @apply py-12 lg:py-16;
+}
+
+/* Animation utilities */
+.animate-enter {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-enter-delay {
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2;
+}
+
+/* Professional gradient */
+.gradient-bg {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Professional product card hover effect */
+.product-card {
+  @apply overflow-hidden bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 transition-all duration-300;
+}
+
+.product-card:hover {
+  @apply shadow-xl;
+  transform: translateY(-2px);
+}
+
+/* Professional image aspect ratios */
+.aspect-product {
+  aspect-ratio: 4/5;
+}
+
+.aspect-hero {
+  aspect-ratio: 16/9;
+}
+
+/* Remove default focus outlines for mouse users */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}

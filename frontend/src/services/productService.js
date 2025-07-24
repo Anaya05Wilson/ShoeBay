@@ -66,9 +66,11 @@ export const productService = {
     }
   },
 
-  getBrands: async () => {
+  getBrands: async (searchTerm = '') => {
     try {
-      const response = await api.get('/products/brands');
+      const response = await api.get('/products/brands', {
+        params: searchTerm ? { search: searchTerm } : {}
+      });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch brands');

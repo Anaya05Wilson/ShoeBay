@@ -198,6 +198,21 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /products/brands?search=term
+router.get('/brands', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let brands = await Product.distinct('brand', { isActive: true });
+    if (search) {
+      const term = search.toLowerCase();
+      brands = brands.filter(b => b && b.toLowerCase().includes(term));
+    }
+    res.json(brands.map(b => ({ name: b })));
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching brands', error: err.message });
+  }
+});
+
 // ➕ CREATE NEW PRODUCT WITH IMAGES (Admin only)
 router.post('/with-images', verifyAdmin, upload.array('images', 5), async (req, res) => {
   try {

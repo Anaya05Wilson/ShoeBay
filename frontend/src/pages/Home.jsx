@@ -4,19 +4,24 @@ import { ArrowRight } from 'lucide-react';
 import { productService } from '../services/productService';
 
 const Home = () => {
-  const [ setLoading] = useState(true);
+  const [brands, setBrands] = useState([]);
+  const [loadingBrands, setLoadingBrands] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchBrands = async () => {
       try {
-        await productService.getFeaturedProducts(); // Keeping call for backend readiness
+        // Fetch all products, extract unique brands
+        const data = await productService.getAllProducts({});
+        const products = data.products || data;
+        const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean)));
+        setBrands(uniqueBrands.slice(0, 6));
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        setBrands([]);
       } finally {
-        setLoading(false);
+        setLoadingBrands(false);
       }
     };
-    fetchProducts();
+    fetchBrands();
   }, []);
 
   return (
@@ -37,24 +42,6 @@ const Home = () => {
           Browse Collection
           <ArrowRight className="ml-2 h-5 w-5" />
         </Link>
-      </section>
-
-      {/* Categories */}
-      <section className="py-12 px-6 bg-white text-black">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
-          {[
-            { name: "Men", link: "/products?category=men" },
-            { name: "Women", link: "/products?category=women" },
-            { name: "Sports", link: "/products?category=sports" },
-            { name: "Casual", link: "/products?category=casual" },
-            { name: "Formal", link: "/products?category=formal" },
-            { name: "Sneakers", link: "/products?category=sneakers" }
-          ].map((cat, i) => (
-            <Link key={i} to={cat.link} className="bg-gray-100 rounded-xl p-4 text-center hover:bg-gray-200 transition">
-              <p className="font-bold">{cat.name}</p>
-            </Link>
-          ))}
-        </div>
       </section>
 
       {/* Lifestyle Campaign */}
@@ -130,22 +117,23 @@ const Home = () => {
       <section className="py-12 bg-gray-100 px-6 text-black">
         <h2 className="text-2xl font-bold mb-8 text-center">Shop by Brand</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center">
-          {[
-            'Nike',
-            'Adidas',
-            'Puma',
-            'Converse',
-            'Vans',
-            'New Balance'
-          ].map((brand, i) => (
-            <Link
-              key={i}
-              to={`/brands/${brand.toLowerCase()}`}
-              className="bg-gray-100 px-6 py-4 rounded-lg text-center font-bold hover:scale-105 transition-transform"
-            >
-              {brand}
-            </Link>
-          ))}
+          {loadingBrands ? (
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="bg-gray-200 animate-pulse h-12 rounded-lg" />
+            ))
+          ) : brands.length > 0 ? (
+            brands.map((brand, i) => (
+              <Link
+                key={brand || i}
+                to={`/brands?q=${encodeURIComponent(brand)}`}
+                className="bg-gray-100 px-6 py-4 rounded-lg text-center font-bold hover:scale-105 transition-transform"
+              >
+                {brand}
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-6 text-center text-gray-500">No brands found.</div>
+          )}
         </div>
       </section>
 

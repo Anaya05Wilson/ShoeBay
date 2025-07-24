@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Cart = () => {
   const { 
     cartItems, 
@@ -87,7 +89,9 @@ const Cart = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <img
-                          src={item.image || '/api/placeholder/120/120'}
+                          src={item.images && item.images.length > 0
+                            ? `${API_BASE_URL.replace(/\/api$/, '')}/api/products/${item.id}/images/0`
+                            : `${API_BASE_URL.replace(/\/api$/, '')}/api/assets/domino-studio.jpg`}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />

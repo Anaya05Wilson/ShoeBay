@@ -11,6 +11,7 @@ import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Brands from './pages/Brands';
 import Category from './pages/Category';
+import ProductDetails from './pages/ProductDetails';
 
 // Context Providers
 import { AuthProvider } from './context/AuthContext';
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/products/:id" element={<ProductDetails />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/brands" element={<Brands />} />
                 <Route path="/category" element={<Category />} />

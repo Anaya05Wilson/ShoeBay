@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Filter, Grid, List, Star, Heart, Plus } from 'lucide-react';
 import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
@@ -24,9 +24,18 @@ const Products = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [addedMap, setAddedMap] = useState({});
+  const [likedMap, setLikedMap] = useState({});
+  const [userRatings, setUserRatings] = useState({});
+  const [ratingCounts, setRatingCounts] = useState({});
 
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Get search term from URL
+  const searchParams = new URLSearchParams(location.search);
+  const searchTerm = searchParams.get('q')?.toLowerCase() || '';
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -45,6 +54,10 @@ const Products = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product, '9', 1);
+    setAddedMap(prev => ({ ...prev, [product._id]: true }));
+    setTimeout(() => {
+      setAddedMap(prev => ({ ...prev, [product._id]: false }));
+    }, 2000);
   };
 
   const handleProductAdded = (newProduct) => {
@@ -78,8 +91,30 @@ const Products = () => {
     }
   };
 
+  // Like handler
+  const handleLike = (productId) => {
+    setLikedMap(prev => ({ ...prev, [productId]: !prev[productId] }));
+  };
+
+  // Interactive rating handler
+  const handleRate = (productId, rating) => {
+    setUserRatings(prev => ({ ...prev, [productId]: rating }));
+    setRatingCounts(prev => ({
+      ...prev,
+      [productId]: (prev[productId] || Math.round((products.find(p => p._id === productId)?.rating || 0))) + rating
+    }));
+    // Here you would call the backend to submit the rating
+  };
+
   const filteredProducts = products.filter(product => {
+    // Search filter
+    const matchesSearch = !searchTerm ||
+      product.name?.toLowerCase().includes(searchTerm) ||
+      product.brand?.toLowerCase().includes(searchTerm) ||
+      product.category?.toLowerCase().includes(searchTerm);
+    // Other filters
     return (
+      matchesSearch &&
       (!filters.category || product.category === filters.category) &&
       (!filters.brand || product.brand === filters.brand) &&
       (!filters.minPrice || product.price >= parseInt(filters.minPrice)) &&
@@ -94,8 +129,11 @@ const Products = () => {
         return a.price - b.price;
       case 'price-high':
         return b.price - a.price;
-      case 'rating':
-        return b.rating - a.rating;
+      case 'rating': {
+        const aRating = userRatings[a._id] ?? Math.round(a.rating || 0);
+        const bRating = userRatings[b._id] ?? Math.round(b.rating || 0);
+        return bRating - aRating;
+      }
       case 'name':
       default:
         return a.name.localeCompare(b.name);
@@ -291,8 +329,12 @@ const Products = () => {
                       Sale
                     </span>
                   )}
-                  <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
-                    <Heart className="h-4 w-4 text-gray-600" />
+                  {/* Like button */}
+                  <button
+                    className={`absolute top-2 right-2 p-2 rounded-full shadow-md transition-colors ${likedMap[product._id] ? 'bg-red-100' : 'bg-white'} hover:bg-red-200`}
+                    onClick={() => handleLike(product._id)}
+                  >
+                    <Heart className={`h-4 w-4 ${likedMap[product._id] ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} fill={likedMap[product._id] ? 'currentColor' : 'none'} />
                   </button>
                   
                   {/* Admin Menu */}
@@ -310,9 +352,24 @@ const Products = () => {
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">{product.brand}</span>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600 ml-1">{product.rating}</span>
+                    <div className="flex items-center gap-1">
+                      {/* Interactive star rating */}
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const userRating = userRatings[product._id];
+                        const avgRating = Math.round(product.rating || 0);
+                        const filled = userRating ? i < userRating : i < avgRating;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            className="focus:outline-none"
+                            onClick={() => handleRate(product._id, i + 1)}
+                          >
+                            <Star className={`h-4 w-4 ${filled ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                          </button>
+                        );
+                      })}
+                      <span className="text-sm text-gray-600 ml-1">{userRatings[product._id] ?? 0}</span>
                     </div>
                   </div>
                   <h3 className="font-semibold text-gray-900">
@@ -343,9 +400,10 @@ const Products = () => {
                     </Link>
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                      className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+                      disabled={!!addedMap[product._id]}
                     >
-                      Add to Cart
+                      {addedMap[product._id] ? 'Added!' : 'Add to Cart'}
                     </button>
                   </div>
                 </div>

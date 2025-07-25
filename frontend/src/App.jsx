@@ -16,6 +16,16 @@ import ProductDetails from './pages/ProductDetails';
 // Context Providers
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { useAuth } from './hooks/useAuth';
+
+function UserOnlyRoute({ children }) {
+  const { user } = useAuth();
+  if (user && user.isAdmin) {
+    window.location.href = '/products';
+    return null;
+  }
+  return children;
+}
 
 function App() {
   return (
@@ -31,7 +41,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetails />} />
-                <Route path="/cart" element={<Cart />} />
+                <Route path="/cart" element={<UserOnlyRoute><Cart /></UserOnlyRoute>} />
                 <Route path="/brands" element={<Brands />} />
                 <Route path="/category" element={<Category />} />
                 <Route path="/categories" element={<Category />} />

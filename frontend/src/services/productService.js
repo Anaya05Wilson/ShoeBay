@@ -147,5 +147,14 @@ export const productService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to upload images');
     }
+  },
+
+  deleteProductImage: async (productId, imageIndex) => {
+    try {
+      const response = await api.delete(`/products/${productId}/images/${imageIndex}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete product image');
+    }
   }
 };

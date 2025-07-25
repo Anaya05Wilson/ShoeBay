@@ -188,9 +188,24 @@ const EditProductModal = ({ isOpen, onClose, product, onProductUpdated }) => {
     });
   };
 
-  const removeImage = (index) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  const removeImage = async (index) => {
+    const img = imageUrls[index];
+    if (typeof img === 'string') {
+      // New image (not yet uploaded), just remove from preview and files
+      setImageUrls(prev => prev.filter((_, i) => i !== index));
+      setImageFiles(prev => prev.filter((_, i) => i !== index));
+    } else if (img && typeof img === 'object' && img.data !== undefined) {
+      // Existing image, delete from backend
+      try {
+        await productService.deleteProductImage(product._id, index);
+        // Refetch product to update images
+        const updatedProduct = await productService.getProductById(product._id);
+        setImageUrls(updatedProduct.images || []);
+        setFormData(prev => ({ ...prev, images: updatedProduct.images || [] }));
+      } catch (error) {
+        alert('Failed to delete image. Please try again.');
+      }
+    }
   };
 
   const validateForm = () => {
@@ -226,21 +241,25 @@ const EditProductModal = ({ isOpen, onClose, product, onProductUpdated }) => {
         )
       };
 
+      // Remove images field from update payload to avoid breaking Buffer storage
+      delete cleanData.images;
+
       // Upload images if any
       if (imageFiles.length > 0) {
         try {
-          const uploadResult = await productService.uploadProductImages(product._id, imageFiles);
-          cleanData.images = [...formData.images, ...uploadResult.images];
+          await productService.uploadProductImages(product._id, imageFiles);
         } catch (error) {
           console.error('Image upload failed:', error);
           // Continue without new images
         }
       }
 
-      const result = await productService.updateProduct(product._id, cleanData);
-      console.log('✅ Product updated successfully:', result);
-      
-      onProductUpdated(result.product);
+      // Update product details (without images field)
+      await productService.updateProduct(product._id, cleanData);
+
+      // Fetch the updated product to get the latest images and details
+      const updatedProduct = await productService.getProductById(product._id);
+      onProductUpdated(updatedProduct);
       onClose();
       
     } catch (error) {
@@ -308,25 +327,37 @@ const EditProductModal = ({ isOpen, onClose, product, onProductUpdated }) => {
               Product Images
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={url.startsWith('http') ? url : `http://localhost:5000/api/products/${product._id}/images/${index}`}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg"
-                    onError={(e) => {
-                      e.target.src = 'http://localhost:5000/api/assets/domino-studio.jpg';
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
+              {imageUrls.map((img, index) => {
+                let src;
+                if (typeof img === 'string') {
+                  // New image preview (data URL)
+                  src = img;
+                } else if (img && typeof img === 'object' && img.data !== undefined) {
+                  // Existing image from backend
+                  src = `http://localhost:5000/api/products/${product._id}/images/${index}`;
+                } else {
+                  src = 'http://localhost:5000/api/assets/domino-studio.jpg';
+                }
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={src}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.src = 'http://localhost:5000/api/assets/domino-studio.jpg';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">

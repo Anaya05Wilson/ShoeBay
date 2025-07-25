@@ -84,19 +84,20 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Cart */}
-            <Link
-              to="/cart"
-              className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              <ShoppingCart className="h-6 w-6" />
-              {getCartItemsCount() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getCartItemsCount()}
-                </span>
-              )}
-            </Link>
-
+            {/* Cart (only for non-admin users) */}
+            {user && !user.isAdmin && (
+              <Link
+                to="/cart"
+                className="relative p-2 text-gray-700 hover:text-primary-600 transition-colors"
+              >
+                <ShoppingCart className="h-6 w-6" />
+                {getCartItemsCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {getCartItemsCount()}
+                  </span>
+                )}
+              </Link>
+            )}
             {/* User Menu */}
             {isAuthenticated ? (
               <div className="relative">

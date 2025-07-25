@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, Star, Heart, Plus } from 'lucide-react';
 import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
@@ -30,7 +30,8 @@ const Products = () => {
   const [ratingCounts, setRatingCounts] = useState({});
 
   const { addToCart } = useCart();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   // Get search term from URL
@@ -53,6 +54,10 @@ const Products = () => {
   }, []);
 
   const handleAddToCart = (product) => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
     addToCart(product, '9', 1);
     setAddedMap(prev => ({ ...prev, [product._id]: true }));
     setTimeout(() => {
@@ -69,10 +74,10 @@ const Products = () => {
       // Product was deleted
       setProducts(prevProducts => prevProducts.filter(p => p._id !== selectedProduct._id));
     } else {
-      // Product was updated
-      setProducts(prevProducts => 
-        prevProducts.map(p => p._id === updatedProduct._id ? updatedProduct : p)
-      );
+      // Product was updated: fetch the latest product list from backend
+      productService.getAllProducts().then(data => {
+        setProducts(data.products || data);
+      });
     }
   };
 
@@ -398,13 +403,15 @@ const Products = () => {
                     >
                       View Details
                     </Link>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold"
-                      disabled={!!addedMap[product._id]}
-                    >
-                      {addedMap[product._id] ? 'Added!' : 'Add to Cart'}
-                    </button>
+                    {(!user || !user.isAdmin) && (
+                      <button
+                        onClick={() => handleAddToCart(product)}
+                        className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+                        disabled={!!addedMap[product._id]}
+                      >
+                        {addedMap[product._id] ? 'Added!' : 'Add to Cart'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

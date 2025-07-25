@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../hooks/useAuth';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { productService } from '../services/productService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -11,8 +15,27 @@ const Cart = () => {
     updateQuantity, 
     clearCart, 
     getCartTotal,
-    getCartItemsCount 
+    getCartItemsCount,
+    addToCart
   } = useCart();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const [suggestedProducts, setSuggestedProducts] = useState([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else if (user && user.isAdmin) {
+      navigate('/products');
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    // Fetch all products for suggestions
+    productService.getAllProducts().then(data => {
+      setSuggestedProducts(data.products || data);
+    });
+  }, []);
 
   const handleQuantityChange = (productId, size, newQuantity) => {
     if (newQuantity < 1) {
@@ -51,6 +74,35 @@ const Cart = () => {
               <ArrowLeft className="mr-2 h-5 w-5" />
               Continue Shopping
             </Link>
+          </div>
+        </div>
+        {/* Recommended Products */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {suggestedProducts
+              .filter(product => !cartItems.some(item => String(item.id) === String(product._id)))
+              .slice(0, 8)
+              .map((product) => (
+                <div key={product._id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+                  <img
+                    src={product.images && product.images.length > 0
+                      ? `${API_BASE_URL.replace(/\/api$/, '')}/api/products/${product._id}/images/0`
+                      : `${API_BASE_URL.replace(/\/api$/, '')}/api/assets/domino-studio.jpg`}
+                    alt={product.name}
+                    className="aspect-square object-cover rounded-lg mb-3"
+                  />
+                  <h3 className="font-medium text-gray-900 mb-1">{product.name}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{product.brand}</p>
+                  <p className="text-lg font-semibold text-blue-600">{formatPrice(product.price)}</p>
+                  <button
+                    className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold mt-3"
+                    onClick={() => addToCart(product, '9', 1)}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              ))}
           </div>
         </div>
       </div>
@@ -219,18 +271,29 @@ const Cart = () => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* This would typically fetch related products */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm p-4">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-3"></div>
-                <h3 className="font-medium text-gray-900 mb-1">Sample Product {i}</h3>
-                <p className="text-sm text-gray-500 mb-2">Brand Name</p>
-                <p className="text-lg font-semibold text-blue-600">{formatPrice(99.99)}</p>
-                <button className="w-full mt-3 bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                  Add to Cart
-                </button>
-              </div>
-            ))}
+            {suggestedProducts
+              .filter(product => !cartItems.some(item => String(item.id) === String(product._id)))
+              .slice(0, 8)
+              .map((product) => (
+                <div key={product._id} className="bg-white rounded-lg shadow-sm p-4 flex flex-col">
+                  <img
+                    src={product.images && product.images.length > 0
+                      ? `${API_BASE_URL.replace(/\/api$/, '')}/api/products/${product._id}/images/0`
+                      : `${API_BASE_URL.replace(/\/api$/, '')}/api/assets/domino-studio.jpg`}
+                    alt={product.name}
+                    className="aspect-square object-cover rounded-lg mb-3"
+                  />
+                  <h3 className="font-medium text-gray-900 mb-1">{product.name}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{product.brand}</p>
+                  <p className="text-lg font-semibold text-blue-600">{formatPrice(product.price)}</p>
+                  <button
+                    className="flex-1 bg-primary-600 text-white text-center py-2 rounded-lg hover:bg-primary-700 transition-colors font-semibold mt-3"
+                    onClick={() => addToCart(product, '9', 1)}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              ))}
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { productService } from '../services/productService';
 import { useCart } from '../context/CartContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://shoebay-backend-7uev.onrender.com/api';
 
 const ProductDetails = () => {
   const { id } = useParams();

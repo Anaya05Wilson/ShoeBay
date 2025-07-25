@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Star } from 'lucide-react';
 import { productService } from '../services/productService';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://shoebay-backend-7uev.onrender.com/api';
 
 const Brands = () => {
   const [products, setProducts] = useState([]);
